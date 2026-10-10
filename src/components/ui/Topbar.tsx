@@ -1,11 +1,15 @@
 "use client";
 
+import { h1 } from "framer-motion/client";
 import {
   Bell,
   HelpCircle,
+  LogOut,
   Menu,
   Search,
 } from "lucide-react";
+
+import {useSession} from "next-auth/react";
 
 type TopbarProps = {
   avatar: string;
@@ -20,6 +24,7 @@ export default function Topbar({
   search = "",
   onSearchChange,
 }: TopbarProps) {
+
   return (
     <header className="fixed left-0 right-0 top-0 z-30 flex h-16 items-center justify-between border-b border-[#434938] bg-[#131315]/95 px-4 backdrop-blur-md lg:left-[260px] lg:px-6">
       {/* Left side */}
@@ -83,15 +88,6 @@ export default function Topbar({
 
         {/* Divider */}
         <div className="hidden h-6 w-px bg-[#434938] sm:block" />
-
-        {/* Avatar */}
-        <button className="h-8 w-8 overflow-hidden rounded-full border border-[#434938]">
-          <img
-            src={avatar}
-            alt="User avatar"
-            className="h-full w-full object-cover"
-          />
-        </button>
       </div>
     </header>
   );

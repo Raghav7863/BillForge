@@ -316,6 +316,7 @@ export default function registerPage() {
                 <motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
+                  onClick={() => signIn("google", { callbackUrl: "/" })}
                   type="button"
                   className="mt-6 flex w-full items-center justify-center gap-2 rounded border border-[#353437] px-4 py-2 text-sm transition hover:bg-[#2a2a2c]"
                 >

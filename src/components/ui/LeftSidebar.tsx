@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
   LayoutDashboard,
+  LogOut,
   Package,
   Receipt,
-  Settings,
   ShieldCheck,
   Users,
   X,
 } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -31,6 +32,8 @@ export default function LeftSidebar({
   setSidebarOpen,
 }: LeftSidebarProps) {
   const pathname = usePathname();
+
+  const { data: session } = useSession();
 
   return (
     <>
@@ -55,11 +58,10 @@ export default function LeftSidebar({
         animate={{
           x: sidebarOpen ? 0 : undefined,
         }}
-        className={`fixed left-0 top-0 z-50 flex h-full w-[260px] flex-col justify-between bg-[#1c1b1d] shadow-[0_1px_8px_rgba(0,0,0,0.04)] ${
-          sidebarOpen
+        className={`fixed left-0 top-0 z-50 flex h-full w-[260px] flex-col justify-between bg-[#1c1b1d] shadow-[0_1px_8px_rgba(0,0,0,0.04)] ${sidebarOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0"
-        } transition-transform duration-300`}
+          } transition-transform duration-300`}
       >
         <div className="flex flex-col">
           {/* Logo */}
@@ -123,11 +125,10 @@ export default function LeftSidebar({
                   key={item.label}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors ${
-                    isActive
+                  className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors ${isActive
                       ? "border-l-2 border-[#bef264] bg-[#2a2a2c] font-medium text-[#e5e1e4]"
                       : "text-[#c3c9b2] hover:bg-[#2a2a2c] hover:text-[#e5e1e4]"
-                  }`}
+                    }`}
                 >
                   <Icon size={18} />
 
@@ -141,20 +142,22 @@ export default function LeftSidebar({
         {/* Sidebar Bottom */}
         <div className="flex flex-col gap-1 p-2">
           {/* Settings */}
-          <Link
-            href="/settings"
-            onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors ${
-              pathname === "/settings" ||
-              pathname.startsWith("/settings/")
-                ? "border-l-2 border-[#bef264] bg-[#2a2a2c] font-medium text-[#e5e1e4]"
-                : "text-[#c3c9b2] hover:bg-[#2a2a2c] hover:text-[#e5e1e4]"
-            }`}
-          >
-            <Settings size={18} />
 
-            <span>Settings</span>
-          </Link>
+          {
+            session?.user.id ? <div
+              onClick={() => { signOut({callbackUrl: "/"}) }}
+              className={`flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition-colors ${pathname === "/settings" ||
+                  pathname.startsWith("/settings/")
+                  ? "border-l-2 border-[#bef264] bg-[#2a2a2c] font-medium text-red-400"
+                  : "text-[#c3c9b2] hover:bg-[#2a2a2c] hover:text-red-600"
+                }`}
+            >
+              <LogOut size={18} />
+
+              <span>LogOut</span>
+            </div> : ""
+          }
+
 
           {/* Security Status */}
           <div className="mt-1 flex items-center justify-between rounded-lg bg-[#201f22] p-2">
