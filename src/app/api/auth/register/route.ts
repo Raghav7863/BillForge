@@ -8,59 +8,84 @@ import { generateOTP } from "@/lib/otpGenerator";
 
 export async function POST(req: NextRequest) {
     try {
-
         const { name, email, password } = await req.json();
 
         await connectDb();
 
-        if (!name || !email || !password) {
-            return NextResponse.json({
-                message: "All Field's are Required"
-            }, { status: 400 })
+        if (typeof name !== "string" || typeof email !== "string" || typeof password !== "string" || !name.trim() || !email.trim() || !password) {
+            return NextResponse.json(
+                { message: "All fields are required" },
+                { status: 400 }
+            );
         }
 
-        const UserAlreadyExits = await User.findOne({
-            email
-        })
+        const normalizedEmail = email.trim().toLowerCase();
 
-        if (UserAlreadyExits) {
-            return NextResponse.json({
-                message: "User Already Exists"
-            }, { status: 400 })
+        const existingUser = await User.findOne({
+            email: normalizedEmail,
+        });
+
+        if (existingUser?.isVerified === true) {
+            return NextResponse.json(
+                {
+                    message: "User already exists. Please log in.",
+                },
+                { status: 409 }
+            );
+        }
+
+        const generatedotp = generateOTP();
+
+        const hashedOtp = await bcrypt.hash(String(generatedotp), 10);
+
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        if (existingUser) {
+            existingUser.otp = hashedOtp;
+            existingUser.otpExpiresAt = expiresAt;
+
+            await existingUser.save();
+
+            await sendOTPEmail(normalizedEmail, String(generatedotp));
+
+            return NextResponse.json(
+                {
+                    message: "Your account is awaiting verification. A new OTP has been sent to your email.",
+                    userId: existingUser._id.toString(),
+                },
+                { status: 200 }
+            );
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const generatedotp = generateOTP();
-
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-        const hashedOtp = await bcrypt.hash(generatedotp, 10);
-
         const createdUser = await User.create({
-            name,
-            email,
+            name: name.trim(),
+            email: normalizedEmail,
             password: hashedPassword,
             otp: hashedOtp,
-            otpExpiresAt: expiresAt
-        })
+            otpExpiresAt: expiresAt,
+            isVerified: false,
+        });
 
         const createBusiness = await Business.create({
             ownerId: createdUser._id,
-            email: email,
+            email: normalizedEmail,
             logo: "",
-            phone: "",
             address: "",
             gstin: "",
             currency: "INR",
             invoicePrefix: "INV",
-        })
+        });
 
         createdUser.businessId = createBusiness._id;
 
         await createdUser.save();
 
-        await sendOTPEmail(email, generatedotp);
+        await sendOTPEmail(
+            normalizedEmail,
+            String(generatedotp)
+        );
 
         return NextResponse.json(
             {
@@ -69,13 +94,24 @@ export async function POST(req: NextRequest) {
             },
             { status: 201 }
         );
-    } catch (error) {
-        console.error(error);
+    } catch (error: any) {
+        console.error("Registration error:", error);
+
+        // Handle concurrent requests for the same email
+        if (error?.code === 11000) {
+            return NextResponse.json(
+                {
+                    message: "This email is already registered. Please try logging in or request a new verification OTP.",
+                },
+                { status: 409 }
+            );
+        }
 
         return NextResponse.json(
-            { message: "Something went wrong" },
+            {
+                message: error.message || "Something went wrong",
+            },
             { status: 500 }
         );
     }
-
 }
