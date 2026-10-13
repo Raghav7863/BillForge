@@ -189,12 +189,12 @@ export default function page() {
                     Password
                   </label>
 
-                  <a
-                    href="#forgot-password"
+                  <Link
+                    href="/login/forgot-password"
                     className="text-sm text-[#bff365] transition-colors hover:text-[#a4d64c]"
                   >
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
 
                 <div className="relative">
