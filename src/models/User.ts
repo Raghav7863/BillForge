@@ -8,6 +8,8 @@ interface IUser extends Document {
     otp?: string,
     isVerified?: boolean,
     otpExpiresAt?: Date,
+    Resetotp?: string,
+    ResetotpExpiresAt?: Date,
     provider: string
 }
 
@@ -38,6 +40,14 @@ const userSchema:Schema = new mongoose.Schema<IUser>({
     },
     otpExpiresAt: {
         type: Date,
+    },
+    Resetotp: {
+        type: String,
+        default: null
+    },
+    ResetotpExpiresAt: {
+        type: Date,
+        default: null
     },
     provider: {
         type: String,

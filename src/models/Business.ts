@@ -27,7 +27,8 @@ const businessSchema:Schema = new mongoose.Schema<IBusiness>({
     },
     phone: {
         type: String,
-        default: ""
+        default: undefined,
+        trim: true
     },
     address: {
         type: String,
